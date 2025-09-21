@@ -5,6 +5,10 @@ calculator. The code has been built using the Borland C++ compiler using a
 compact memory model and has been tested to work on an IBM 5150 with 256 KiB of
 memory.
 
+![HF4MSDOS calculation](img/hf4msdos_001.png)
+![HF4MSDOS energy matrix](img/hf4msdos_002.png)
+![HF4MSDOS coefficient matrix](img/hf4msdos_003.png)
+
 ## Compilation instructions
 
 Install [Borland's Turbo C++](https://winworldpc.com/product/borland-c/30) on
