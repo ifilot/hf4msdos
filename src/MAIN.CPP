@@ -23,34 +23,15 @@ static void wait_for_key() {
     printf("\r");
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     clrscr();
 
-    /* NOTE: All atom coordinates are in Angstrom but will be
-             automatically converted to Bohr units (a.u.) in the
-             Molecule class */
+    if(argc < 2) {
+        printf("Usage: %s input.mol\n");
+        return -1;
+    }
 
-    // H2 molecule
-    Molecule h2(2);
-    h2.set_atom(0, "H", 0.0, 0.0, -0.3679020);
-    h2.set_atom(1, "H", 0.0, 0.0,  0.3679020);
-    //h2.print();
-
-    // CO molecule
-    Molecule co(2);
-    co.set_atom(0, "C", 0, 0,  0.5120840);
-    co.set_atom(1, "O", 0, 0, -0.6827790);
-
-    // LiH molecule
-    Molecule lih(2);
-    lih.set_atom(0, "Li", 0.0, 0.0,  0.724572);
-    lih.set_atom(1, "H" , 0.0, 0.0, -2.173714);
-
-    Molecule h2o(3);
-    h2o.set_atom(0, "O", 0, 0, 0.1368220);
-    h2o.set_atom(1, "H", 0, 0.7697660, -0.5472890);
-    h2o.set_atom(2, "H", 0, -0.7697660, -0.5472890);
-
+    Molecule mol(argv[1]);
     clock_t tic, toc; // keep track of time
 
     printf("========================\n");
@@ -58,53 +39,24 @@ int main() {
     printf("  version: %i.%i.%i\n",
            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
     printf("========================\n");
-    printf("I come pre-compiled with a number of molecules.\n");
-    printf("Which molecule would you like me to simulate?\n");
-    printf("1 - H2\n");
-    printf("2 - CO\n");
-    printf("3 - LiH\n");
-    printf("4 - H2O\n");
-    printf("Q - QUIT\n");
-    printf("Press 1-4 to start simulation or q to quit.\n");
-
-    char c = getch();
-    while(!( (c>='1' && c<='4') || c == 'q')) {
-        c = getch();
-    }
-
-    Molecule *mol;
-    switch(c) {
-        case '1':
-            mol = &h2;
-        break;
-        case '2':
-            mol = &co;
-        break;
-        case '3':
-            mol = &lih;
-        break;
-        case '4':
-            mol = &h2o;
-        break;
-        case 'q':
-            printf("Goodbye!\n");
-            return 0;
-    }
 
     // build and assign basis set
     tic = clock();
-    printf("\nStarting simulation\n");
+    printf("Starting simulation\n");
+    mol.print();
     BasisBuilder bb;
-    Basis basis = bb.build_basis(*mol);
-    mol->assign_basis(basis.size(), basis.get_cgfs());
-    HF hf(mol);
+    Basis basis = bb.build_basis(mol);
+    mol.assign_basis(basis.size(), basis.get_cgfs());
+    HF hf(&mol);
     hf.run();
     toc = clock();
     double calctime = (double)(toc - tic) / CLOCKS_PER_SEC;
 
+    char c;
     printf("Simulation complete (%.2f seconds)\n", calctime);
     while(1) {
         printf("Which output would you like to view?\n");
+        printf("0 - Print molecular coordinates\n");
         printf("1 - Overlap matrix\n");
         printf("2 - Kinetic matrix\n");
         printf("3 - Nuclear matrix\n");
@@ -115,10 +67,14 @@ int main() {
         printf("8 - Total calculation time\n");
         printf("q - Quit\n");
         c = getch();
-        while(!((c>='1' && c<='8') || c == 'q')) {
+        while(!((c>='0' && c<='8') || c == 'q')) {
             c = getch();
         }
         switch(c) {
+            case '0':
+                mol.print();
+                wait_for_key();
+            break;
             case '1':
                 printf("Overlap matrix:\n");
                 hf.get_overlap_matrix().print("% 6.4f ");

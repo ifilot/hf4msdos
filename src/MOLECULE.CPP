@@ -22,6 +22,65 @@ Molecule::Molecule(unsigned _nr_atoms) : nr_atoms(_nr_atoms) {
     }
 }
 
+Molecule::Molecule(const char* filename) {
+    this->nr_atoms = 1;
+    ifstream in(filename);
+    if(!in) {
+        cerr << "Cannot open file!" << endl;
+        exit(-1);
+    }
+    char buf[256];
+    unsigned ctr = 0;
+    unsigned atid = 0;
+    while(in.getline(buf, sizeof(buf)) && atid<this->nr_atoms) {
+        switch(ctr) {
+            case 0: /* molecule label, skip this */
+            break;
+            case 1: /* grab number of atoms */
+                this->nr_atoms = atoi(buf);
+                this->atom_pos = (double*)calloc(this->nr_atoms*3, sizeof(double));
+                this->atom_el = (unsigned char*)calloc(this->nr_atoms, sizeof(unsigned char));
+            break;
+            default:
+                if(atid >= this->nr_atoms) {
+                    break;
+                }
+                char el[3];
+                char piece[20];
+                double px = 0.0;
+                double py = 0.0;
+                double pz = 0.0;
+                if(buf[1] == ' ') {
+                    el[0] = buf[0];
+                    el[1] = 0;
+                } else {
+                    memcpy(el, buf, 2);
+                    el[2] = 0;
+                }
+                for(int i=0; i<3; ++i) {
+                    memcpy(piece, &buf[i*15+4], 14);
+                    piece[14] = 0;
+                    switch(i) {
+                        case 0:
+                            px = atof(piece);
+                        break;
+                        case 1:
+                            py = atof(piece);
+                        break;
+                        case 2:
+                            pz = atof(piece);
+                        break;
+                    }
+                }
+                this->set_atom(atid, el, px, py, pz);
+                atid++;
+            break;
+        }
+        ctr++;
+    }
+    in.close();
+}
+
 void Molecule::set_atom(unsigned elid, const char *el, double px, double py, double pz) {
     if(elid >= this->nr_atoms) {
         cerr << "Invalid element id encountered!" << endl;
@@ -101,4 +160,15 @@ double Molecule::calculate_nuclear_repulsion() const {
 void Molecule::assign_basis(unsigned sz, const CGF* _cgfs) {
     this->nr_bfs = sz;
     this->cgfs = _cgfs;
+}
+
+void Molecule::print() const {
+    for(int i=0; i<this->nr_atoms; ++i) {
+        printf("%i %12.6f %12.6f %12.6f\n",
+            this->atom_el[i],
+            this->get_atom_coord(i,0),
+            this->get_atom_coord(i,1),
+            this->get_atom_coord(i,2)
+        );
+    }
 }

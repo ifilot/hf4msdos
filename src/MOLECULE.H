@@ -5,6 +5,7 @@
 #include <iostream.h>
 #include <string.h>
 #include <stdio.h>
+#include <fstream.h>
 
 #include "cgf.h"
 
@@ -21,6 +22,8 @@ private:
 
 public:
     Molecule(unsigned _nr_atoms);
+
+    Molecule(const char* filename);
 
     void set_atom(unsigned elid, const char *el, double px, double py, double pz);
 
@@ -53,6 +56,8 @@ public:
     double calculate_nuclear_repulsion() const;
 
     unsigned get_nr_elec() const;
+
+    void print() const;
 
     ~Molecule();
 
